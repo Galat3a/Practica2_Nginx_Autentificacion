@@ -360,4 +360,7 @@ server {
 
 En esta parte no puedo añadir captura ya que me era imposible dar con la ip correcta que debo de poner en el location, intenté varias opciones pero todas me dejaban entrar sin problema a privado.html
 
+## Documentos paramore.
+
+Adjunto en el proyecto, 5 tipos de archivos llamados paramore que serían los que se van cambiando en sudo nano /etc/nginx/sites-available/paramore para realizar las distintas tareas de la practica
 
