@@ -231,3 +231,133 @@ Sin este enlace simbólico, Nginx no puede reconocer ni cargar la configuración
 ¿Qué ocurre si no asigno los permisos correctos a la carpeta /var/www/nombre_web?
 
 Sin los permisos adecuados, Nginx no podrá leer o acceder a los archivos necesarios para mostrar el contenido del sitio. Es importante que el usuario www-data, bajo el cual opera Nginx, tenga permisos de lectura en los archivos y de ejecución en los directorios. Sin estos permisos, el acceso al sitio dará errores. Para evitar problemas, los directorios suelen configurarse con permisos 755, lo cual permite tanto el acceso como la navegación entre carpetas.
+
+
+
+
+
+# Autentificación
+
+## 1. Comprobación de OpenSSL: Primero, verificamos que el paquete de herramientas de OpenSSL esté instalado en el sistema. Para ello, usamos el siguiente comando:
+```bash
+   dpkg -l | grep openssl
+
+```
+## 2.Creación del archivo .htpasswd: A continuación, creamos el archivo .htpasswd en la ruta /etc/nginx para almacenar los usuarios y contraseñas. Primero, añadimos el nombre de usuario:
+
+```bash
+   sudo sh -c "echo -n 'nombre:' >> /etc/nginx/.htpasswd"
+
+```
+Luego, generamos la contraseña encriptada y la añadimos al archivo:
+
+```bash
+  sudo sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd"
+
+```
+podemos verificar que el archivo .htpasswd se ha creado correctamente con el siguiente comando:
+```bash
+   cat /etc/nginx/.htpasswd
+
+```
+##  3. Configuración del bloque del servidor en Nginx: Ahora, editamos el archivo de configuración del sitio web en Nginx para aplicar las restricciones de autenticación. Para ello, abrimos el archivo correspondiente:
+```bash
+sudo nano /etc/nginx/sites-available/paramore
+
+
+```
+Dentro del archivo, agregamos las directivas de autenticación al bloque location de la siguiente manera:
+```bash
+
+server {
+    listen 80;
+    listen [::]:80;
+    root /var/www/paramore/html;
+    index index.html index.htm index.nginx-debian.html;
+    server_name perfect_learn;
+
+    location / {
+        auth_basic "Área restringida";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        try_files $uri $uri/ =404;
+    }
+}
+
+```
+
+## 4. Reinicio del servicio Nginx: Para aplicar los cambios realizados en la configuración, reiniciamos el servicio Nginx con el siguiente comando:
+```bash
+sudo systemctl restart nginx
+
+```
+Captura de la creacion de contraseñas a traves del comando 
+```bash
+sudo sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd"
+
+```
+<img src="img/1.png"/>
+
+## Tarea 2.1. - Ficheros error.log y access.log
+
+Captura del intento de acceder a la web, donde pide autentificación, la introduzco correctamente y entro:
+
+<img src="img/2.png"/>
+<img src="img/3.png"/>
+<img src="img/4.png"/>
+
+Captura del intento de acceser a la web con credenciales no autorizadas:
+<img src="img/6.png"/>
+
+Capturas de los sucesos y registros en los logs access.log y error.log:
+error.log
+<img src="img/7.png"/>
+access.log
+<img src="img/8.png"/>
+
+
+## Tarea 2.2. - Acceso restringido a la sección Contact
+Se vuelve a editar el archivo paramore de /etc/nginx/sites-available, y esta vez añadiemos la localización de la sección contact para la autenticación.
+```bash
+
+server {
+	listen 80;
+	listen [::]:80;
+	root /var/www/paramore/html/perfect_learn;
+	index index.html index.htm index.nginx-debian.html;
+	server_name perfect_learn;
+	location = /contact.html {
+		deny 192.168.57.1;
+		allow all;
+		try_files $uri $uri/ =404;
+	}
+}
+
+```
+<img src="img/9.png"/>
+<img src="img/10.png"/>
+
+
+## Tarea 3.2. - Doble autenticación, IP y usuario
+
+Se configura Nginx para que, desde la máquina anfitriona, se requiera tanto una IP válida como un usuario autorizado para poder acceder.
+
+Para ello, se modifica el bloque de servidor (server block) de la siguiente manera, incorporando las restricciones de IP y autenticación de usuario al mismo tiempo:
+
+server {
+    listen 80;
+    listen [::]:80;
+    root /var/www/paramore/html/perfect_learn;
+    index index.html index.htm index.nginx-debian.html;
+    server_name perfect_learn;
+
+    location privado/privado.html {
+        deny 192.168.57.1;
+        deny all;
+        try_files $uri $uri/ =404;
+    }
+}
+<img src="img/12.png"/>
+
+En esta parte no puedo añadir captura ya que me era imposible dar con la ip correcta que debo de poner en el location, intenté varias opciones pero todas me dejaban entrar sin problema a privado.html
+
+
